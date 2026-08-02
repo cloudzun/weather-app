@@ -153,6 +153,19 @@ body.flash .lightning { animation: lightningFlash .65s ease-out; }
 }
 .brand { display: flex; align-items: center; gap: 11px; }
 .brand h1 { font-size: 20px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 12px rgba(0,0,0,.2); }
+.github-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.18);
+  color: #fff; flex-shrink: 0;
+  transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+}
+.github-link:hover {
+  background: rgba(255,255,255,.28);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+}
+.github-link svg { width: 18px; height: 18px; }
 .controls {
   display: flex; align-items: center; gap: 8px;
   flex-wrap: nowrap; justify-content: flex-end;
