@@ -56,16 +56,16 @@ docker run -d -p 8080:80 weather-app
 # 访问 http://localhost:8080
 ```
 
-推送到 Docker Hub（cloudzun）：
+推送到 Docker Hub（chengzh）：
 
 ```bash
 docker login
-docker tag weather-app cloudzun/weather-app:latest
-docker push cloudzun/weather-app:latest
+docker tag weather-app chengzh/weather-app:latest
+docker push chengzh/weather-app:latest
 ```
 
 仓库已配置 GitHub Actions 工作流（`.github/workflows/docker-publish.yml`），在 GitHub 仓库
-Settings → Secrets and variables → Actions 中添加 `DOCKERHUB_USERNAME`（cloudzun）和
+Settings → Secrets and variables → Actions 中添加 `DOCKERHUB_USERNAME`（chengzh）和
 `DOCKERHUB_TOKEN`（Docker Hub 访问令牌）后，每次 push 到 main 会自动构建并推送镜像。
 
 ## 目录结构
