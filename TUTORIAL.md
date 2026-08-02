@@ -203,3 +203,45 @@ docker run -d -p 8080:80 <你的用户名>/weather-app
 - [ ] Docker Hub 上能看到自己的镜像
 
 全部完成，就实现了一次完整的"需求 → 开发 → 发布"闭环。
+
+---
+
+## 附录：参考示例与验证资源
+
+以下是本教程配套的参考实现（由教师维护），学员可以对照检查自己的成果。
+注意：学员自己完成后的仓库地址、站点地址和镜像名都会不同，请以自己得到的为准。
+
+### 1. 参考实现
+
+- GitHub 仓库：<https://github.com/cloudzun/weather-app>
+- 教程文档：仓库内 `TUTORIAL.md`（即本文档）
+
+### 2. 在线示例网站
+
+- GitHub Pages 示例：<https://www.cloudzun.com/weather-app/>
+- Vercel 示例：<https://weather-app-steel-five-33.vercel.app>
+- 临时演示环境（Killercoda，可能过期）：<https://17da85be91e3-10-244-4-202-8080.spca.r.killercoda.com/>
+
+### 3. Docker 镜像验证
+
+- 镜像名：`chengzh/weather-app`
+- Docker Hub 页面：<https://hub.docker.com/r/chengzh/weather-app>
+- 拉取并运行：
+
+```bash
+docker pull chengzh/weather-app
+docker run -d -p 8080:80 chengzh/weather-app
+# 浏览器访问 http://localhost:8080
+```
+
+### 4. 快速自查命令
+
+- 代码是否推送成功：打开自己的 GitHub 仓库地址，能看到代码与提交记录
+- 线上页面是否正常：打开自己的站点，能显示真实天气数据，浏览器控制台无报错
+- 镜像是否可用：
+
+```bash
+docker images          # 能看到本地镜像
+docker run -d -p 8080:80 <自己的镜像名>
+# 访问 http://localhost:8080 能显示页面
+```
