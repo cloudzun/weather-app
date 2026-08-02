@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天气预报 · Weather</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⛅</text></svg>' />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="sunny-day">
+
+  <!-- 背景场景层 -->
+  <div class="scene" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="moon" id="moon"></div>
+    <div class="clouds">
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="cloud c3"></div>
+      <div class="cloud c4"></div>
+    </div>
+    <div class="fog f1"></div>
+    <div class="fog f2"></div>
+    <div class="lightning"></div>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
+          <circle cx="32" cy="32" r="13" fill="url(#brandSun)"/>
+          <g stroke="#ffd76e" stroke-width="4" stroke-linecap="round">
+            <line x1="32" y1="4" x2="32" y2="13"/>
+            <line x1="32" y1="51" x2="32" y2="60"/>
+            <line x1="4" y1="32" x2="13" y2="32"/>
+            <line x1="51" y1="32" x2="60" y2="32"/>
+            <line x1="12.2" y1="12.2" x2="18.5" y2="18.5"/>
+            <line x1="45.5" y1="45.5" x2="51.8" y2="51.8"/>
+            <line x1="51.8" y1="12.2" x2="45.5" y2="18.5"/>
+            <line x1="18.5" y1="45.5" x2="12.2" y2="51.8"/>
+          </g>
+          <defs>
+            <radialGradient id="brandSun" cx="50%" cy="45%" r="60%">
+              <stop offset="0%" stop-color="#fff9d8"/>
+              <stop offset="100%" stop-color="#ffc93c"/>
+            </radialGradient>
+          </defs>
+        </svg>
+        <h1>天气预报</h1>
+      </div>
+
+      <div class="controls">
+        <form id="search-form" class="search">
+          <input id="city-input" type="text" placeholder="搜索城市：上海 / Beijing / 31.23,121.47" autocomplete="off" spellcheck="false" />
+          <button type="submit" class="btn-search" aria-label="搜索">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16.2" y2="16.2"/>
+            </svg>
+          </button>
+        </form>
+        <button id="locate-btn" class="icon-btn" title="使用我的位置" aria-label="使用我的位置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="7"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+          </svg>
+        </button>
+        <button id="refresh-btn" class="icon-btn" title="刷新" aria-label="刷新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12a8 8 0 1 1-2.3-5.7"/>
+            <path d="M20 3v4h-4"/>
+          </svg>
+        </button>
+        <div class="unit-toggle" role="group" aria-label="温度单位">
+          <button id="unit-c" class="active" type="button">°C</button>
+          <button id="unit-f" type="button">°F</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- 加载中 -->
+      <section id="loading" class="loading card" aria-label="加载中">
+        <div class="sk big"></div>
+        <div class="sk mid"></div>
+        <div class="sk"></div>
+        <div class="sk small"></div>
+      </section>
+
+      <!-- 错误 -->
+      <section id="error" class="error card hidden" role="alert">
+        <div class="error-icon">🌧️</div>
+        <p id="error-msg">加载失败</p>
+        <button id="retry-btn" class="retry-btn" type="button">重新加载</button>
+      </section>
+
+      <!-- 内容 -->
+      <div id="content" class="content hidden">
+        <section class="hero card">
+          <div class="hero-top">
+            <div>
+              <span class="overline">当前天气</span>
+              <h2 id="location">--</h2>
+              <p id="date-line">--</p>
+            </div>
+            <div class="hero-update">更新于 <span id="update-time">--</span></div>
+          </div>
+          <div class="hero-main">
+            <div id="hero-icon" class="hero-icon"></div>
+            <div class="hero-temp"><span id="cur-temp">--</span><span class="temp-unit">°C</span></div>
+            <div class="hero-info">
+              <div id="cur-desc" class="cur-desc">--</div>
+              <div id="cur-range" class="cur-range">--</div>
+              <div id="hero-facts" class="hero-facts"></div>
+            </div>
+          </div>
+          <div class="hero-sun">
+            <div class="sun-row">
+              <span>日出 <b id="run-sunrise">--</b></span>
+              <span class="sun-day">白昼 <b id="run-daylight">--</b></span>
+              <span>日落 <b id="run-sunset">--</b></span>
+              <span>月相 <b id="run-moon">--</b></span>
+            </div>
+            <div class="sun-path">
+              <div class="sun-track">
+                <div class="sun-track-fill" id="sun-track-fill"></div>
+                <div class="sun-now" id="sun-now"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 跑者台：跑步适宜度、空气质量、日照、最佳时段 -->
+        <section class="card runner" id="runner" aria-label="跑步天气建议">
+          <div class="runner-head">
+            <div class="runner-title">
+              <span class="badge">RUNNER</span>
+              <h3>现在适合跑步吗？</h3>
+            </div>
+            <div class="score-box">
+              <svg class="score-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#7ce08a"/>
+                    <stop offset="100%" stop-color="#ffd76e"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                <circle class="ring-fg" id="score-ring-fg" cx="60" cy="60" r="52"/>
+              </svg>
+              <div class="score-num"><span id="run-score">--</span><small>分</small></div>
+            </div>
+            <div class="score-text">
+              <div id="run-grade" class="run-grade">--</div>
+              <div id="run-summary" class="run-summary">--</div>
+            </div>
+            <div class="head-tips">
+              <span class="advice-title">温馨提示</span>
+              <ul id="run-advice" class="run-advice"></ul>
+            </div>
+            <button id="aqi-gear" class="icon-btn aqi-gear" type="button" title="空气质量数据源" aria-label="空气质量数据源设置">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="runner-grid">
+            <div class="runner-col">
+              <div class="advice-title">关键指标</div>
+              <div id="runner-metrics" class="runner-metrics"></div>
+            </div>
+            <div class="runner-col">
+              <div class="advice-title">未来 24 小时最佳跑步窗口</div>
+              <div id="run-window" class="run-window">查询中…</div>
+            </div>
+          </div>
+
+          <div id="aqi-settings" class="aqi-settings hidden">
+            <div class="aqi-settings-inner">
+              <span class="advice-title">可选：和风天气 Key（精确国标 AQI）</span>
+              <div class="aqi-key-row">
+                <input id="qkey-input" type="password" placeholder="填入和风天气免费 Key" autocomplete="off" spellcheck="false" />
+                <button id="qkey-save" class="retry-btn small" type="button">保存</button>
+                <button id="qkey-clear" class="icon-btn" type="button" title="清除 Key">✕</button>
+              </div>
+              <p class="aqi-settings-hint">不填则默认使用 aqicn 监测站实测（美标口径）。填入 Key 后改用和风天气国控监测数据（国标口径，与国内天气 App 一致）。Key 只保存在本机浏览器，可到 dev.qweather.com 免费申请。</p>
+            </div>
+          </div>
+
+        </section>
+
+        <section class="card panel">
+          <div class="panel-head">
+            <h3>24 小时预报</h3>
+            <span class="hint">滑动查看更多</span>
+          </div>
+          <div id="hourly" class="hourly"></div>
+        </section>
+
+        <div class="middle-grid">
+          <section class="card panel">
+            <div class="panel-head"><h3>未来 3 天</h3></div>
+            <div id="forecast" class="forecast"></div>
+          </section>
+
+          <section class="card panel">
+            <div class="panel-head"><h3>气温趋势</h3></div>
+            <div class="chart-wrap">
+              <svg id="chart" viewBox="0 0 720 220" class="chart" aria-label="未来 24 小时气温曲线"></svg>
+              <div id="chart-tip" class="chart-tip hidden"></div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+
+    <footer>
+      <p class="foot-main">数据来源 <a href="https://wttr.in/" target="_blank" rel="noreferrer">wttr.in</a>（天气）· aqicn / 和风天气 / Open-Meteo（空气质量）· 天气数据仅供日常参考</p>
+      <p id="aqi-note" class="foot-aqi"></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
